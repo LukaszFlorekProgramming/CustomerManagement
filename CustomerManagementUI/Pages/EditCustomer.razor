@@ -1,0 +1,82 @@
+﻿@page "/edit-customer/{CustomerId:int}"
+@using CustomerManagementUI.Models
+@using CustomerManagementUI.Services
+@inject ICustomerService CustomerService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Customers</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            @if (updateCustomerDto == null)
+            {
+                <p><em>Ładowanie danych klienta...</em></p>
+            }
+            else
+            {
+                <EditForm Model="@updateCustomerDto" OnValidSubmit="HandleValidSubmit">
+                    <div class="d-flex justify-content-center mt-2 mb-4">
+                        <h3>Edytuj kontrahenta</h3>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Nazwa:</label>
+                        <InputText id="name" class="form-control" @bind-Value="updateCustomerDto.Name" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Adres:</label>
+                        <InputText id="address" class="form-control" @bind-Value="updateCustomerDto.Address" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nip">NIP:</label>
+                        <InputText id="nip" class="form-control" @bind-Value="updateCustomerDto.NIP" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center">
+                        <button type="submit" class="btn btn-primary mt-2">Dodaj klienta</button>
+                    </div>
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                </EditForm>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int CustomerId { get; set; }
+    private string updateMessage;
+
+    private UpdateCustomerDto updateCustomerDto = new UpdateCustomerDto();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomers();
+    }
+
+    private async Task LoadCustomers()
+    {
+        var response = await CustomerService.GetCustomerById(CustomerId);
+
+        if (updateCustomerDto != null)
+        {
+            updateCustomerDto = new UpdateCustomerDto
+                {
+                    Name = response.Name,
+                    Address = response.Address,
+                    NIP = response.NIP
+                };
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var success = await CustomerService.UpdateCustomer(CustomerId, updateCustomerDto);
+        if (success)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}

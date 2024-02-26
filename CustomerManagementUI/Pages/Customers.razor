@@ -1,0 +1,79 @@
+﻿@page "/"
+@using CustomerManagementUI.Models
+@using CustomerManagementUI.Services
+@inject ICustomerService CustomerService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Customers</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-center mt-2 mb-4">
+                <h3>Customers Management</h3>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-success mb-4" @onclick="NavigateToAddCustomer">Dodaj klienta</button>
+            </div>
+            <table class="table table-striped table-hover table-responsive">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Nazwa klienta</th>
+                        <th>Adres</th>
+                        <th>NIP</th>
+                        <th class="text-end">Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (CustomersResult != null && CustomersResult.Any())
+                    {
+                        @foreach (var customer in CustomersResult)
+                        {
+                            <tr>
+                                <td>@customer.Name</td>
+                                <td>@customer.Address</td>
+                                <td>@customer.NIP</td>
+                                <td class="text-end">
+                                    <button class="btn btn-primary" @onclick="() => EditCustomer(customer.Id)">Edytuj</button>
+                                    <button class="btn btn-danger" @onclick="() => DeleteCustomer(customer.Id)">Usuń</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center">Brak danych do wyświetlenia</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private IEnumerable<CustomerDto> CustomersResult;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CustomersResult = await CustomerService.GetCustomers();
+    }
+
+    private void NavigateToAddCustomer()
+    {
+        NavigationManager.NavigateTo("/add-customer");
+    }
+
+    private void EditCustomer(int CustomerId)
+    {
+        NavigationManager.NavigateTo($"/edit-customer/{CustomerId}");
+    }
+
+    private async Task DeleteCustomer(int customerId)
+    {
+        await CustomerService.DeleteCustomer(customerId);
+        CustomersResult = await CustomerService.GetCustomers();
+        StateHasChanged();
+    }
+}
